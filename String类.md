@@ -14,7 +14,9 @@ class String
 public:
     String(const char *cstr = 0);
     String(const String &str);
+    String(string &&str);
     String &operator=(const String &str);
+    String &operator=(String&& str);
     char *get_c_str() const { return m_data; }
 
     ~String();
@@ -51,6 +53,11 @@ inline String::String(const String &str)
     std::cout << "拷贝构造" << std::endl;
 }
 
+inline String::String(string &&str) : m_data(str.m_data) 
+{
+        str.m_data = nullptr;
+}
+
 inline String &String::operator=(const String &str)
 {
     if (this == &str)
@@ -67,6 +74,18 @@ inline String &String::operator=(const String &str)
     // return *this返回的是当前对象的克隆或者本身（若返回类型为A， 则是克隆， 若返回类型为A&， 则是本身 ）。
     // return this返回当前对象的地址（指向当前对象的指针）,
     return *this;
+}
+
+inline String &String::operator=(String&& str)
+{
+    if (this == &str) {
+        if (m_data) {
+            delete[] m_data;
+        }
+
+        m_data = str.m_data;
+        str.m_data = nullptr;
+    }
 }
 
 std::ostream &
