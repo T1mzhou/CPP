@@ -14,7 +14,7 @@ class String
 public:
     String(const char *cstr = 0);
     String(const String &str);
-    String(string &&str);
+    String(string&& str);
     String &operator=(const String &str);
     String &operator=(String&& str);
     char *get_c_str() const { return m_data; }
@@ -53,7 +53,7 @@ inline String::String(const String &str)
     std::cout << "拷贝构造" << std::endl;
 }
 
-inline String::String(string &&str) : m_data(str.m_data) 
+inline String::String(string&& str) : m_data(str.m_data) 
 {
         str.m_data = nullptr;
 }
