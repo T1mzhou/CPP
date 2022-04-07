@@ -103,9 +103,103 @@ void testAuto()
 
 }
 
+// decltype
+// 推导规则:
+//        1.exp是标识符,类访问表达式,decltype(exp)和exp的类型一致
+//        2.exp是函数调用,decltype(exp)和返回值的类型一致
+//        3.其他情况,若exp是一个左值,则decltype(exp)是exp类型的左值引用，否则和exp类型一致
+// 应用：
+//       1.泛型编程
+//       2.返回类型后置语法
+class Foo2
+{
+ public:
+    static const int Number = 0;
+    int x;
+};
+
+
+int& func_int_r(void); // 左值
+int&& func_int_rr(void); //x值，xvalue
+int func_int(void);      //纯右值
+
+const int& func_cint_r(void); // 左值
+const int&& func_cint_rr(void); // x值
+const int func_cint(void); // 纯右值
+const Foo2 func_cfoo(void); // 纯右值
+
+struct Foo3{
+    int x;
+};
+
+template <class ContainterT>
+class Foo4
+{
+    decltype (ContainterT().begin()) it_; // 没有类型推导,需要去特化const类型
+public:
+    void func(ContainterT& container)
+    {
+        it_ = container.begin();
+    }
+};
+
+template <typename T, typename U>
+auto add(T t, U u) -> decltype (t + u)
+{
+    return t + u;
+}
+
+void testDecltype()
+{
+    int x = 0;
+    decltype(x) y = 1;          // y -> int
+    decltype(x + y) z = 0;      // z -> int
+
+    const int& i = x;
+    decltype(i) j = y;          // i -> const int&
+
+    const decltype(z) * p = &z; // p ->const int*
+    decltype(z) * pi = &z;      // pi -> int*
+    decltype(pi) * pp = &pi;    // pp -> int**
+
+    // 标识符表达式和类访问表达式
+    int n = 0;
+    volatile const int & x1 = n;
+
+    decltype (n) a = n;   // int
+    decltype (x1) b = n;  // volatile const int &
+
+    decltype (Foo2::Number) c = 0; // const int
+
+    Foo2 foo;
+    decltype (foo.x) d = 0; // d ->int
+
+    // 函数调用
+    decltype (func_int_r()) a1 = x;   // a1 -> int &
+    decltype (func_int_rr()) b1 = 0;  // b1 -> int&&
+    decltype (func_int()) c1 = 0;     // c1 -> int
+    decltype (func_cint_r()) a2 = x;  // a2 -> const int&
+    decltype (func_cint_rr()) b2 = 0; // b2 -> const int&&
+    decltype (func_cint()) c2 = 0;    // c2 -> const int //errror 应该返回int，因为函数返回的int是纯右值,对于纯右值而言,只有类类型才可以携带CV限定符。
+
+    decltype(func_cfoo()) ff = Foo2(); // ff -> const Foo
+
+    // 带扩号的表达式和加法运算表达式
+    const Foo3 foo1 = Foo3();
+
+    decltype (foo1.x) a3 = 0;     // a -> int
+    decltype ((foo1.x)) b3 = a3;  // b ->? const int& foo.x是一个左值,可以知道括号表达式也是一个左值,所以是一个左值引用，并且foo1是const类型，所以是为const int&
+
+    int n1 = 0, m = 0;
+    decltype(n1 + m) c3 = 0;     // c -> int // 返回右值
+    decltype(n1 += m) d3 = c3;    // c -> int& // 返回左值, 按规则3为int &
+
+}
+
 int main()
 {
-    testAuto();
+    //testAuto();
+    testDecltype();
 
     return 0;
 }
