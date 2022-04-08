@@ -196,6 +196,59 @@ void testDecltype()
 
 }
 
+// 模板别名
+
+using func_t = void (*)(int, int);
+using map_int_t = std::map<std::string, int>;
+using uint_t = unsigned int;
+
+// 列表初始化
+//  好处: 统一的初始化类型
+
+struct A
+{
+    int x;
+    int y;
+} a = { 1, 2};
+
+class Foo5
+{
+public:
+    Foo5(int) {}
+
+private:
+    Foo5(const Foo5&);
+};
+
+struct Foo6
+{
+    Foo6(int, double) {}
+};
+
+Foo6 func()
+{
+    return {123, 321.0}; // 用于函数返回值
+}
+
+
+
+void testInitList()
+{
+    int i_arr[3] = { 1, 2, 3};
+    long l_arr[] = { 1, 3, 2, 4};
+
+    Foo5 a1(123);
+    //Foo5 a2 = 123; // error：私有
+    Foo5 a3 = { 123 };
+    Foo5 a4{ 123 };
+
+    Foo5 a5 = { 3 };
+    Foo5 a6{ 3 };
+
+    int* arr = new int[3] { 1, 2, 3};
+
+}
+
 int main()
 {
     //testAuto();
