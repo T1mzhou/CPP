@@ -1,5 +1,7 @@
 #include <iostream>
 #include <map>
+#include <vector>
+#include <functional>
 
 using namespace std;
 
@@ -203,7 +205,14 @@ using map_int_t = std::map<std::string, int>;
 using uint_t = unsigned int;
 
 // 列表初始化
-//  好处: 统一的初始化类型
+//  好处: 统一的初始化类型，防止类型收窄
+// 使用细节: 聚合类型可以直接使用
+//  什么类型是聚合类型：
+//                  1.普通数组；
+//                  2.类型是一个类(class struct union)且无用户自定义构造函数,无私有保护的非静态数据成员,无基类,无虚函数,不能有{}和=直接初始化的非静态成员
+//  非聚合类型使用初始化列表时自定义一个构造函数
+// 初始化列表
+// 初始化任意长度的初始化列表
 
 struct A
 {
@@ -230,7 +239,35 @@ Foo6 func()
     return {123, 321.0}; // 用于函数返回值
 }
 
+class Foo7
+{
+public:
+    Foo7(std::initializer_list<int>) {}
 
+};
+
+class FooVector
+{
+    std::vector<int> content_;
+
+public:
+    FooVector(std::initializer_list<int> list) // 接收初始化列表
+    {
+        for (auto it = list.begin(); it != list.end(); ++it)
+        {
+            content_.push_back(*it);
+            std::cout << *it << std::endl;
+        }
+    }
+};
+
+void func(std::initializer_list<int> l) // 传递同类型参数
+{
+    for (auto it = l.begin(); it != l.end(); ++it)
+    {
+        std::cout << *it << std::endl;
+    }
+}
 
 void testInitList()
 {
@@ -247,12 +284,260 @@ void testInitList()
 
     int* arr = new int[3] { 1, 2, 3};
 
+    delete []arr;
+
+    vector<int> test = { 1, 2 ,3, 4};
+
+    Foo7 foo7 = { 1, 2, 3, 4, 5};
+
+    FooVector foo_1 = { 1, 2, 3, 4};
+
+    func({});    // 传递空集合
+    func({1, 2, 3}); // 传递{1, 2, 3}
 }
+
+// 基于范围的 for
+// 细节：
+//  1.遍历map val的类型是std::pair.需要使用val.first和val.second来提取键值
+//  2.auto自动推导的类型是容器中的value_type,不是迭代器
+//  3.需要注意容器本身的一些约束如set内部的值是只读的,map里面的std::pair的引用是不能修改first的
+//  4.不要在迭代的过程中修改迭代的容器容易出现迭代器失效等问题
+//  5.支持自定义类型,需要实现begin，end,operator*(),operator!=,operator++
+void BasedOnRangeFor()
+{
+    std::vector<int> arr{7, 8, 9};
+
+    for (auto it = arr.begin(); it != arr.end(); ++it)
+    {
+        cout << *it << endl;
+    }
+
+    // 使用基于范围for
+    for (auto n : arr) // 只读方式遍历
+    {
+        cout << n << endl;
+    }
+
+    for (auto& n : arr) // 修改访问值
+    {
+        cout << n++ << endl;
+    }
+
+    for (auto n : arr) // 遍历修改后的值
+    {
+        cout << n << endl;
+    }
+}
+
+// std::function和std::bind
+// 好处:
+//    1.使用标准库函数更方便
+//    2.方便的实现延迟求值
+// 可调用对象
+// 1.是一个函数指针
+// 2.是一个具有operator()成员函数的类对象(仿函数)
+// 3.是一个可别转换为函数指针的对象
+// 4.是一个类成员(成员)指针
+
+// std::bind
+// 可调用对象包装器
+// 作用：
+// 1.可以容纳除类成员(函数)指针之外的所有可调用对象
+// 2.讲可调用对象和参数一起绑定。延迟调用到任何我们需要的时候
+// 3.将可调用对象和其参数一起绑定成一个仿函数
+// 4.将多元可调用对象转成一元或者(n-1)元可调用对象。既只绑定部分参数
+void func1(void)
+{
+
+}
+
+struct Foo8{
+    void operator()(void)
+    {
+
+    }
+};
+
+struct Bar6{
+    using fr_t = void(*)(void);
+
+    static void func3(void)
+    {
+    }
+
+    operator fr_t(void)
+    {
+        return func3;
+    }
+};
+
+struct A6
+{
+    int a_;
+    void mem_func(void)
+    {
+        cout << "A6" << endl;
+    }
+};
+
+void func9(void)
+{
+    cout << __FUNCTION__ << endl;
+}
+
+class Foo9
+{
+public:
+    static int foo_func(int a)
+    {
+        cout << __FUNCTION__ << "(" << a << ") -> ";
+        return a;
+    }
+};
+
+class Bar9
+{
+public:
+    int operator() (int a)
+    {
+        cout << __FUNCTION__ << "(" << a << ") ->: ";
+        return a;
+    }
+};
+
+class A9
+{
+    function<void()> callback_; // function作为回调函数
+public:
+    A9(const function<void()>& f) : callback_(f)
+    {
+
+    }
+
+    void notify(void)
+    {
+        callback_();
+    }
+};
+
+class Foo10
+{
+public:
+    void operator() (void)
+    {
+        cout << __FUNCTION__ << "call Foo10 "<< endl;
+    }
+};
+
+// 作为函数入参
+void call_when_even(int x, const function<void(int)>& f)
+{
+    if ( !(x & 1) ) // x % 2 == 0;
+    {
+        f(x);
+    }
+}
+
+void output(int x)
+{
+    cout << x << " ";
+}
+
+void output_add_2(int x)
+{
+    cout << x + 2 << " ";
+}
+
+//void output(int x, int y)
+//{
+//    cout << x << " " << y << endl;
+//}
+
+void testFunctionBind()
+{
+    void (* func_ptr)(void) = &func1; // 1.函数指针
+    func_ptr();
+
+    Foo8 foo;                        // 2.仿函数
+    foo();
+
+    Bar6 bar;                        // 3. 可被转换为函数指针的类对象
+    bar();
+
+    void (A6::*mem_func_ptr)(void) = &A6::mem_func; // 4.类成员函数指针或类成员函数指针
+    int A6::*mem_obj_ptr = &A6::a_;
+
+    A6 aa;
+    (aa.*mem_func_ptr )();
+    aa.*mem_obj_ptr = 123; // 不知道这个为啥也叫可调用对象，或许就是定义吧
+    cout << aa.a_ << endl;
+
+    // testfunction
+    function<void(void)> fr1 = func9; // 绑定一个普通函数
+    fr1();
+
+    // 绑定一个类的静态成员函数
+    function<int(int)> fr2 = Foo9::foo_func;
+    cout << fr2(123) << endl;
+
+    Bar9 bar1;                              //绑定一个仿函数
+    fr2 = bar1;
+    cout << fr2(123) << endl;
+
+    // 绑定回调
+    Foo10 fo;
+    A9 a9(fo);
+    a9.notify();
+
+    // 参数入参
+    for(int i = 0; i < 10; i++)
+    {
+        call_when_even(i, output);
+    }
+
+    cout << endl;
+
+    //bind基本用法
+    {
+        auto fr = bind(output, placeholders::_1);
+
+        for(int i = 0; i < 10; i++)
+        {
+            call_when_even(i, fr);
+        }
+
+        cout << endl;
+    }
+
+    {
+        auto fr = bind(output_add_2, placeholders::_1);
+
+        for(int i = 0; i < 10; i++)
+        {
+            call_when_even(i, fr);
+        }
+
+        cout << endl;
+    }
+
+    // testbind占位符
+
+    // 和function配合使用
+
+    return ;
+}
+
+
+
 
 int main()
 {
     //testAuto();
-    testDecltype();
+    //testDecltype();
+    //testInitList();
+    //BasedOnRangeFor();
+    testFunctionBind();
+
 
     return 0;
 }
