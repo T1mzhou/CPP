@@ -2,6 +2,7 @@
 #include <map>
 #include <vector>
 #include <functional>
+#include <algorithm>
 
 using namespace std;
 
@@ -528,15 +529,78 @@ void testFunctionBind()
 }
 
 
+// lambda
+// 好处:
+//     1.声明式函数式编程风格,就地匿名定义目标函数或函数对象。不需要额外写。方便，可读性和可维护性高;
+//     2.简洁，不需要额外写函数或者函数对象，减少代码膨胀和功能分散
+//     3.灵活，在需要的时候实现功能闭包
+// 用法:
+// [capture] (params) opt-> res { body; }
+// []标识不捕获任何变量
+// [&]捕获外部作用域中素有变量，并按引用在函数体内使用;
+// [=]捕获外部作用域中的所有变量。并作为副本使用;
+// [=, &foo]按值捕获作用域的所有变量,foo按引用捕捉
+// [bar]按值捕获bar变量
+// [this]捕获类中的this指针,让表达式有和当前类成员变量同样的访问权限;如果已经使用了=，或&默认添加此选项
+// 目的可以在lamda中使用类中的成员函数和成员变量
+// 如果需要去修改按值捕获的外部变量，那么需要显示指明lamda表达式为mutable
+// 使用mutable修饰后需要写明参数列表
+class B
+{
+public:
+    int i_ = 0;
 
+    void func(int x, int y)
+    {
+        //auto x1 = [] { return i_;}  // error
+        auto x2 = [=] { return i_ + x + y; };
+        auto x3 = [&] { return i_ + x + y; };
+        auto x4 = [this] {return i_; };
+        auto x5 = [this, x, y] { return i_ + x + y; };
+        auto x6 = [this, x, y] { return i_ + x + y; };
+        auto x7 = [this] { return i_++;  };
 
+        cout << "x2 = " << x2() << endl;
+        cout << "x3 = " << x3() << endl;
+        cout << "x4 = " << x4() << endl;
+        cout << "x5 = " << x5() << endl;
+        cout << "x6 = " << x6() << endl;
+        cout << "x7 = " << x7() << endl;
+
+    }
+};
+
+void testLambda()
+{
+    B b;
+    b.func(1, 2);
+
+    int a = 0;
+    auto f1 = [=]()mutable { return a++; };
+
+    cout << a << endl;
+
+    vector<int> v = { 1, 2, 3, 4, 5, 6 };
+    int event_count = 0;
+
+    for_each(v.begin(), v.end(), [&event_count](int val)
+    {
+        if (!(val & 1))
+        {
+            ++event_count;
+        }
+    });
+
+    cout << event_count << endl;
+}
 int main()
 {
     //testAuto();
     //testDecltype();
     //testInitList();
     //BasedOnRangeFor();
-    testFunctionBind();
+    //testFunctionBind();
+    testLambda();
 
 
     return 0;
