@@ -593,6 +593,38 @@ void testLambda()
 
     cout << event_count << endl;
 }
+
+// tule元组
+// 基本用法
+// 建议超过3个字段的结构体不适合
+void testtuple()
+{
+    // tuple<const char*, int> tp = make_tuple(sendPack, nSendSize); // 构造一个tuple
+    // 这里相等于一个结构体
+    // struct A
+    //{
+    //  char* p;
+    //  int len;
+    //}
+
+    //auto tp = return std::tie(1, "aa", 2); // tp实际类型为tuple<int&, string&, int&>;
+    // int len = tp.get<1>(); // 获取第二个值
+    //
+    // 方法2：通过tie解包tuple,解包后，tp里面的3个值就自动赋值给3个变量
+//    int x, y;
+//    string a;
+//    std::tie(x , a, y) = tp;
+//    //如果不想解全
+//    std::tie(std::ignore, std::ignore, y) = tp;
+
+    // 创建右值的引用元组方法forward_as_tuple
+    map<int, string> m;
+    m.emplace(forward_as_tuple(10, string(20, 'a'))); // tuple<int&&, string&&>
+
+    // 还可以链接多个tuple
+
+
+}
 int main()
 {
     //testAuto();
