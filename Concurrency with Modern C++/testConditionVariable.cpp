@@ -17,6 +17,14 @@ void waitingForWork() {
     mySharedWork[1] = 2;
     std::cout << "Work done " << std::endl;
 }
+//  std::unique_lock<std::mutex> lck(mtx);
+//  cv.wait(lck, []{return dataReady;}); // 存在伪唤醒和未唤醒的功能
+//  等价于
+//  std::unique_lock<std::mutex> lck(mtx);
+//  while ( ![] { return dataReady; }() {
+//      condVar.wait(lck); 
+// }
+
 
 void setDataReady() {
 
