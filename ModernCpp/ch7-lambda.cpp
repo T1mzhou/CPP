@@ -1,4 +1,7 @@
 #include <iostream>
+#include <vector>
+#include <algorithm>
+#include <future>
 
 // 定义
 // [captures](params) specifiers exception -> ret { body }
@@ -109,6 +112,84 @@ void lambdaDemo6()
     std::cout << foo() << std::endl;
 }
 
+// 无状态lambda表达式可以隐式转换为函数指针
+
+void f(void(*)()) {}
+void f1(void(&)()) {}
+
+void lambdaDemo7()
+{
+    f([]{}); // 编译欧克
+    f(*[] {});
+}
+
+// lambda in STL
+void lambdaDemo8()
+{
+    std::vector<int> x = {1, 2, 3, 4,  5};
+    std::cout << *std::find_if(x.cbegin(),
+                            x.cend(),
+                            [](int i) { return (i % 3) == 0;}) << std::endl;
+
+}
+
+// 广义捕获
+// 1.简单不会，前面的都是
+// 2.初始化捕获，解决了简单捕获的一个重要问题，既只能捕获lambda表达式上下文的变量
+// 而无法捕获表达式解决过以及自定义捕获变量名
+
+// 未定义 
+// class Work {
+// private:
+//     int value;
+
+// public:
+//     Work() : value(42) {}
+//     std::future<int> spawn() {
+//         return std::async([=]()-> int { return value; });
+//     }
+// };
+
+// 解决方案
+class Work {
+private:
+    int value;
+
+public:
+    Work() : value(42) {}
+    std::future<int> spawn() {
+        return std::async([=, tmp = *this]()-> int { return tmp.value; });
+    }
+};
+
+std::future<int> foo1()
+{
+    Work tmp;
+    return tmp.spawn();
+}
+
+void lambdaDemo9()
+{
+    int x = 5;
+    auto foo = [x = x + 1] {return x; }; //C++11 不行
+
+    std::cout << foo() << std::endl;
+
+    // 场景1
+    std::string x1 = "Hello C++";
+    auto foo1 = [x1 = std::move(x1)] { return x1 + "world"; };
+    // 使用std::move对捕获列表变量x进行初始化,避免了值拷贝，直接复制对象提高了效率
+
+    // 场景2
+    // 异步调用时复制this对象,防止lambda表达式被调用时因玉环市this对象被析构而造成未定义的行为
+
+    // std::future<int> f1 = foo1();
+    // f1.wait();
+    // std::cout << "f.get() = " << f1.get() << std::endl;
+
+
+}
+
 int main() {
     lambdaDemo();
     lamdaDemo1();
@@ -118,6 +199,8 @@ int main() {
     lambdaDemo4();
     lambdaDemo5();
     lambdaDemo6();
+    lambdaDemo7();
+    lambdaDemo8();
 
     return 0;
 }
