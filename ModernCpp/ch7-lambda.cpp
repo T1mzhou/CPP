@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include <future>
+#include <map>
+
 
 // 定义
 // [captures](params) specifiers exception -> ret { body }
@@ -186,9 +188,44 @@ void lambdaDemo9()
     // std::future<int> f1 = foo1();
     // f1.wait();
     // std::cout << "f.get() = " << f1.get() << std::endl;
-
-
 }
+
+// 泛型lambda表达式
+void lambdaDemo10()
+{
+    auto foo = [](auto a) { return a; };
+    int three = foo(3);
+    char const* hello = foo("hello");
+}
+
+// 常量lambda表达式和捕获*this
+// 更为优雅的解决方案解决大量用到大量this指向的对象问题
+// class Work1 {
+// private:
+//     int value;
+// public:
+//     Work1() : value(42) {}
+//     std::future<int> spawn() {
+//         return std::async([=, *this]()-> int { return value; });
+//     }
+// };
+
+// C++ 20 新增捕获[=, this]
+// 和[=]表达意思相同，目的时让程序员区分它与[=, *this]的不同
+
+// 模板语法的泛型lambda表达式C++20
+// []<typename T>(T t) {}
+// auto f = []<typename T>(std::vector<T> vector) {};
+
+// 可构造和可赋值的无状态lambda表达式，解决ST俩种需要比较函数对象需要通过模板参数确认的情况
+// C++17不支持，C++20支持
+void lambdaDemo11()
+{
+    auto greater = [](auto x, auto y) { return x > y; };
+    // std::map<std::string, int, decltype(greater)> mymap, mymap1; //无法构造
+    // mymap1 = mymap; // 无法赋值
+}
+
 
 int main() {
     lambdaDemo();
@@ -201,6 +238,10 @@ int main() {
     lambdaDemo6();
     lambdaDemo7();
     lambdaDemo8();
+    lambdaDemo9();
+    lambdaDemo10();
+    lambdaDemo11();
+
 
     return 0;
 }
